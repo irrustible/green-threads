@@ -7,8 +7,12 @@ edition = "2021"
 
 [dependencies]
 
-[target.'cfg(any(target_arch="x86", target_arch="x86"))'.dependencies]
-raw_cpuid = "10.3.0"
+[target.'cfg(any(target_arch="x86", target_arch="x86_64"))'.dependencies]
+raw-cpuid = "10.3"
 
-[target.'cfg(target_arch="arm")'.dependencies]
+[target.'cfg(unix)'.dependencies]
 libc = "0.2.126"
+
+[target.'cfg(windows)'.dependencies]
+winapi = "0.2"
+kernel32-sys = "0.2.2"

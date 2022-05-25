@@ -32,15 +32,19 @@ mod x86;
 #[cfg(target_arch="x86")]
 pub use x86::*;
 
-#[cfg(target_arch="x86-64")]
+#[cfg(target_arch="x86_64")]
 mod x86_64;
-#[cfg(target_arch="x86-64")]
+#[cfg(target_arch="x86_64")]
 pub use x86_64::*;
 
-#[cfg(all(not(target_arch="aarch64"),not(target_arch="arm"),not(target_arch="x86"),not(target_arch="x86-64")))]
-compile_error!("Unsupported architecture! We currently support: aarch64, arm, x86, x86-64");
+#[cfg(all(not(target_arch="aarch64"), not(target_arch="arm"), not(target_arch="x86"), not(target_arch="x86_64")))]
+compile_error!("Unsupported architecture! We currently support: aarch64, arm, x86, x86_64");
+
 
 #[derive(Clone,Copy,Eq,PartialEq)]
 pub struct VTable {
   pub switch: unsafe extern "C" fn(save_to: *mut usize, resume: *mut usize)
 }
+
+pub mod mmap;
+

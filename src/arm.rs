@@ -77,7 +77,7 @@ mod neon {
 }
 
 #[derive(Clone,Copy)]
-pub enum Variant {
+pub enum Profile {
   #[cfg(not(windows))]
   Basic,
   #[cfg(not(target_os = "openbsd"))]
@@ -91,26 +91,26 @@ use libc::{c_int, c_void};
 #[cfg(not(windows))]
 const HWCAP_NEON: c_ulong = 1 << 12;
 
-impl Variant {
+impl Profile {
   #[cfg(any(target_os="android", target_os="linux"))]
-  pub fn detect() -> Variant {
+  pub fn detect() -> Profile {
     use libc::c_ulong;
     extern "C" {
       fn getauxval(type_: c_ulong) -> c_ulong;
     }
     const AT_HWCAP: c_ulong = 16;
     if unsafe { getauxval(AT_HWCAP) & HWCAP_NEON } == HWCAP_NEON {
-      Variant::Neon
+      Profile::Neon
     } else {
-      Variant::Basic
+      Profile::Basic
     }
   }
 
   // #[cfg(target_os="dragonflybsd")]
-  // pub fn detect() -> Variant { Variant::Basic }
+  // pub fn detect() -> Profile { Profile::Basic }
 
   #[cfg(target_os="freebsd")]
-  pub fn detect() -> Variant {
+  pub fn detect() -> Profile {
     use libc::{c_int, c_ulong, c_void};
     extern "C" {
       fn elf_aux_info(aux: c_int, buf: *mut c_void, buflen: c_int) -> c_int;
@@ -122,20 +122,20 @@ impl Variant {
       let _ret = elf_aux_info(AT_HWCAP, buffer, std::mem::size_of_val(&caps) as i32);
     }
     if caps & HWCAP_NEON == HWCAP_NEON {
-      Variant::Neon
+      Profile::Neon
     } else {
-      Variant::Basic
+      Profile::Basic
     }
   }
 
   // #[cfg(target_os="netbsd")]
-  // pub fn detect() -> Variant { Variant::Basic }
+  // pub fn detect() -> Profile { Profile::Basic }
 
   #[cfg(target_os="openbsd")] // OpenBSD disables NEON on 32-bit ARM.
-  pub fn detect() -> Variant { Variant::Basic }
+  pub fn detect() -> Profile { Profile::Basic }
 
   #[cfg(windows)] // Windows only supports ARMv7 + NEON
-  pub fn detect() -> Variant { Variant::Neon }
+  pub fn detect() -> Profile { Profile::Neon }
 
   pub fn vtable(self) -> VTable {
     match self {

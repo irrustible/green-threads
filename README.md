@@ -6,30 +6,42 @@ Stackful coroutines for stable rust.
 
 This library is essentially a hand-written pile of various assembly
 dialects written from first principles and the help of the
-internet. It has not been tested on any architecture at all at this
-point and you should assume it doesn't work.
+internet. It has not yet been tested at all and it's likely broken if
+you can manage to find a use for it at all.
 
 Are you an ABI expert? Please review my code. God knows it could use more eyes.
 
 ## Usage
 
-```rust
-fn main() {
+<!-- ```rust -->
+<!-- use green_threads::*; -->
 
-
-
-
-}
-```
+<!-- fn main() { -->
+<!--   // First detect a profile of the hardware we need to support. -->
+<!--   let profile = Profile::detect(); -->
+<!--   // Then turn that into a vtable -->
+<!--   let vtable = profile.vtable(); -->
+  
+  
+<!-- } -->
+<!-- ``` -->
 
 ## Support
 
-If your architecture does not appear in the list below, we haven't even attempted to support it:
+Supported architectures:
 
 * aarch64
 * arm
 * x86
 * x86_64
+
+Architectures we'd like to support:
+
+* riscv
+
+Note that this completes the list of supported architectures for the
+`asm` macro, so anything else would likely be painful.
+
 
 ## Copyright and License
 

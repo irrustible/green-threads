@@ -36,3 +36,13 @@ pub unsafe extern "C" fn switch(save_to: *mut usize, resume: *mut usize) {
   );
   unreachable!()
 }
+
+#[derive(Clone,Copy)]
+pub enum Profile {
+  Neon,
+}
+
+impl Profile {
+  pub fn detect() -> Profile { Profile::Neon }
+  pub fn vtable(self) -> VTable { VTABLE }
+}
