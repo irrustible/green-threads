@@ -9,18 +9,18 @@ const MMAP_RETURNED_NULL: &str =
   "Mmap returned null, which violates POSIX and certainly isn't sporting.";
 
 #[cfg(any(target_os="dragonflybsd", target_os="freebsd", target_os="linux", target_os="netbsd", target_os="openbsd"))]
-unsafe fn map(size: usize, page_size: PageSize) -> Result<NonNull<u8>, Error> {
+pub unsafe fn map(size: usize, page_size: PageSize) -> Result<Map, Error> {
   let size = page_size.round(size);
   match libc::mmap(null_mut(), size, PROT, FLAGS | libc::MAP_STACK, -1, 0) {
     MAP_FAILED => Err(Error::last_os_error()),
-    not_ptr if not_ptr == null_mut() => panic!("{}", MMAP_RETURNED_NULL),
-    ptr => Ok(NonNull::new_unchecked(ptr as *mut u8))
+    not_ptr if not_ptr.is_null() => panic!("{}", MMAP_RETURNED_NULL),
+    ptr => Ok(Map { start: ptr as *mut _, size }),
   }
 }
 
 // You may note the absence of anything apple in this list. Oh yes.
 #[cfg(all(not(target_os="dragonflybsd"), not(target_os="freebsd"), not(target_os="linux"), not(target_os="netbsd"), not(target_os="openbsd")))]
-unsafe fn map(size: usize, page_size: PageSize) -> Result<Map, Error> {
+pub unsafe fn map(size: usize, page_size: PageSize) -> Result<Map, Error> {
   // This platform, whatever it is (probably something apple), does
   // not support MAP_STACK (or we haven't been able to determine that
   // it does). This is a massive pain because it means we need to
@@ -46,6 +46,7 @@ unsafe fn map(size: usize, page_size: PageSize) -> Result<Map, Error> {
       let ptr = not_ptr as *mut u8;
       match libc::mmap(ptr as *mut _, page_size.size(), libc::PROT_NONE, FLAGS, -1, 0) {
         MAP_FAILED => panic!("{}", GUARD_FAIL),
+        not_ptr if not_ptr.is_null() => panic!("{}", GUARD_NIL),
         not_ptr2 if not_ptr != not_ptr2 => panic!("{}", GUARD_MOVED),
         _ => Ok(Map {
           start: ptr.add(page_size.size()),
@@ -79,12 +80,12 @@ impl PageSize {
 }
 
 pub struct Map {
-  pub start: *mut u8,
+  pub start: *mut usize,
   pub size:  usize,
 }
 
 #[cfg(any(target_os="dragonflybsd", target_os="freebsd", target_os="linux", target_os="netbsd", target_os="openbsd"))]
-unsafe fn unmap(map: Map, page_size: PageSize) -> Result<(), Error> {
+pub unsafe fn unmap(map: Map, _page_size: PageSize) -> Result<(), Error> {
   if 0 == libc::munmap(map.start as *mut _, map.size) {
     Ok(())
   } else {
@@ -93,7 +94,7 @@ unsafe fn unmap(map: Map, page_size: PageSize) -> Result<(), Error> {
 }
 
 #[cfg(all(not(target_os="dragonflybsd"), not(target_os="freebsd"), not(target_os="linux"), not(target_os="netbsd"), not(target_os="openbsd")))]
-unsafe fn unmap(map: Map, page_size: PageSize) -> Result<(), Error> {
+pub unsafe fn unmap(map: Map, page_size: PageSize) -> Result<(), Error> {
   // To be tidy, we will undo the guard page we manually set up as well.
   let ptr = map.start.sub(page_size.size());
   let size = map.size + page_size.size();
